@@ -24,7 +24,6 @@ def load_plant_data(filepath):
     data = df.drop(columns=["Informant"]).values
     return data
 
-
 # Defining Model
 def run_cct_model(data):
     """
@@ -104,7 +103,7 @@ def compare_to_majority(data, trace):
 # Main
 if __name__ == "__main__":
     # Loads dataset
-    data = load_plant_data("/Users/unasantos/Documents/GitHub/cogs107-docker/plant_knowledge.csv")
+    data = load_plant_data("/Users/unasantos/Documents/GitHub/cct-midterm/data/plant_knowledge.csv")
 
     # Run CCT model
     trace = run_cct_model(data)
@@ -113,3 +112,15 @@ if __name__ == "__main__":
     print_model_summary(trace)
     plot_posterior_distributions(trace)
     compare_to_majority(data, trace)
+
+#Report Summary
+    """" 
+    In this project I was tasked with implementing the Cultural Consensus Theory using PyMC
+    as hypothesized by Romney, Weller and Batchelder (1996).
+
+    In their theory, they hypothesized that 
+
+    The results show that Informant #6 or D[5] is the most competent with a mean of 0.923.
+    Meanwhile, the least competent is Informant #3 or D[2] with a mean of 0.398.
+
+    """
