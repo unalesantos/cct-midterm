@@ -8,33 +8,16 @@ import numpy as np
 import pymc as pm
 import arviz as az
 import matplotlib.pyplot as plt
+import os
 
 # Load Data
 def load_plant_data(filepath):
-    """
-    Loads the plant knowledge dataset and removes the 'Informant' column.
-
-    Args:
-        filepath (str): Path to the CSV file
-
-    Returns:
-        np.array: N x M matrix of 0s and 1s (informants x questions)
-    """
-    df = pd.read_csv(filepath)
-    data = df.drop(columns=["Informant"]).values
-    return data
+    df = pd.read_csv(filepath) #load plant knowledge data
+    data = df.drop(columns=["Informant"]).values #removes 'informant' column
+    return data 
 
 # Defining Model
 def run_cct_model(data):
-    """
-    Runs the Cultural Consensus Theory model using PyMC.
-
-    Args:
-        data (np.array): Binary matrix of shape (N, M)
-
-    Returns:
-        trace: Posterior samples from the model
-    """
     N, M = data.shape  # N = number of informants, M = number of items
 
     with pm.Model() as model:
@@ -60,34 +43,30 @@ def run_cct_model(data):
     return trace
 
 # Posterior Analysis
-def plot_posterior_distributions(trace):
-    """
-    Plots posterior distributions for D and Z.
-    """
+def plot_posterior_distributions(trace, script_dir):
+    # Create output path
+    output_dir = os.path.join(script_dir, "..", "data")
+    os.makedirs(output_dir, exist_ok=True)  # Creates it if doesn't exist
+
+    # Plot and save D
     az.plot_posterior(trace, var_names=["D"])
     plt.title("Posterior of Informant Competence (D)")
-    plt.show()
+    plt.savefig(os.path.join(output_dir, "posterior_D.png"))
+    plt.close()
 
+    # Plot and save Z
     az.plot_posterior(trace, var_names=["Z"])
     plt.title("Posterior of Consensus Answers (Z)")
-    plt.show()
+    plt.savefig(os.path.join(output_dir, "posterior_Z.png"))
+    plt.close()
 
 def print_model_summary(trace):
-    """
-    Prints summary statistics of D and Z posteriors.
-    """
     summary = az.summary(trace, var_names=["D", "Z"])
     print(summary)
 
 # Compare With Majority Vote
 def compare_to_majority(data, trace):
-    """
-    Compares model consensus answers to simple majority vote answers.
 
-    Args:
-        data (np.array): Observed data
-        trace: Posterior samples
-    """
     # Posterior mean of each Z (consensus answer)
     z_mean = trace.posterior["Z"].mean(dim=["chain", "draw"]).values
     z_estimated = (z_mean >= 0.5).astype(int)
@@ -103,24 +82,15 @@ def compare_to_majority(data, trace):
 # Main
 if __name__ == "__main__":
     # Loads dataset
-    data = load_plant_data("/Users/unasantos/Documents/GitHub/cct-midterm/data/plant_knowledge.csv")
+    dscript_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_path = os.path.join(dscript_dir, "..", "data", "plant_knowledge.csv")
+    data = load_plant_data(csv_path)
 
     # Run CCT model
     trace = run_cct_model(data)
 
     # Analyze results
     print_model_summary(trace)
-    plot_posterior_distributions(trace)
+    plot_posterior_distributions(trace, dscript_dir)
     compare_to_majority(data, trace)
 
-#Report Summary
-    """" 
-    In this project I was tasked with implementing the Cultural Consensus Theory using PyMC
-    as hypothesized by Romney, Weller and Batchelder (1996).
-
-    In their theory, they hypothesized that 
-
-    The results show that Informant #6 or D[5] is the most competent with a mean of 0.923.
-    Meanwhile, the least competent is Informant #3 or D[2] with a mean of 0.398.
-
-    """
